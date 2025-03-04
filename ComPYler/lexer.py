@@ -1,10 +1,9 @@
 from enum import Enum, auto
 import sys
+import time
 
 
 class TokenType(Enum):
-    # need to be sorted by distinctness, if :: and : are symbols,
-    # :: needs to come first
     RETURN = auto()  # return
     LET = auto()
     IDENTIFIER = auto()  # variable names
@@ -20,6 +19,7 @@ class TokenType(Enum):
     BINARY_OPERATION = auto()
     COMPARISON_OPERATION = auto()
     PUSH_POP = auto()
+    STRING_LITERAL = auto()
 
 
 KEYWORDS = {
@@ -42,6 +42,7 @@ class Token:
 
 
 def tokenize(source: str):
+    # as of writing takes 1ms/token
     tokens: list[Token] = []
     src: list[str] = [
         character for character in source
@@ -49,6 +50,11 @@ def tokenize(source: str):
     # but I'm writing a compiler in python
     while len(src) > 0:
         match src[0]:
+            ### Comment
+            case "/":
+                if src[1] == "/":
+                    while src[0] != "\n":  ### Ignore the rest of the line
+                        src.pop(0)
             ### Parentheses
             case "(":
                 tokens.append(Token("(", TokenType.PAREN_OPEN))
@@ -89,13 +95,25 @@ def tokenize(source: str):
                 # so it's more than one letter (and not a special case like <-)
                 # loop until hit space, check if it's a keyword, ie. return, let
                 word = []
-                while len(src) > 0 and not src[0].isspace():
-                    word.append(src[0])
+                if src[0] == '"':
                     src.pop(0)
+                    # string time
+                    while len(src) > 0 and src[0] != '"':
+                        word.append(src[0])
+                        src.pop(0)
+                    src.pop(0)
+                else:
+                    while len(src) > 0 and not src[0].isspace():
+                        word.append(src[0])
+                        src.pop(0)
                 if len(word) > 0:
                     word_str = "".join(word)
                     if word_str in KEYWORDS:
                         tokens.append(Token(word_str, KEYWORDS[word_str]))
+
+                    if word_str[0] == '"':
+                        tokens.append(Token(word_str, TokenType.STRING_LITERAL))
+
                     elif word_str[0].isnumeric():
                         try:
                             int(word_str)
@@ -119,8 +137,13 @@ def tokenize(source: str):
 
 def main(args):
     with open(args[1]) as f:
+        print("Starting Lexer")
+        start = time.time()
         tokens = tokenize(f.read())
         print([str(token) for token in tokens])
+        elapsed = round((time.time() - start) * 1000, 5)
+        print("Lexer Finished")
+        print("Elapsed: ", elapsed, "ms for ", len(tokens), " tokens.")
 
 
 if __name__ == "__main__":
