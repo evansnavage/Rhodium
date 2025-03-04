@@ -5,7 +5,8 @@ import sys
 class Token_Type(Enum):
     # need to be sorted by distinctness, if :: and : are symbols,
     # :: needs to come first
-    KEYWORD = auto()  # return
+    RETURN = auto()  # return
+    LET = auto()
     IDENTIFIER = auto()  # variable names
     ASSIGNMENT = auto()  # <-
     INTEGER_LITERAL = auto()  # 12
@@ -21,10 +22,10 @@ class Token_Type(Enum):
     PUSH_POP = auto()
 
 
-class Keywords(Enum):
-    RETURN = 0
-    LET = 1
-
+KEYWORDS = {
+    "return": Token_Type.RETURN,
+    "let": Token_Type.LET,
+}
 
 # example program
 # let error_code: int32 <- 0
@@ -93,10 +94,8 @@ def tokenize(source: str):
                     src.pop(0)
                 if len(word) > 0:
                     word_str = "".join(word)
-                    if word_str == "return":
-                        tokens.append(Token("return", Token_Type.KEYWORD))
-                    elif word_str == "let":
-                        tokens.append(Token("let", Token_Type.KEYWORD))
+                    if word_str in KEYWORDS:
+                        tokens.append(Token(word_str, KEYWORDS[word_str]))
                     elif word_str[0].isnumeric():
                         try:
                             int(word_str)
