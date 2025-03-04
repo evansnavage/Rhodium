@@ -1,0 +1,45 @@
+A programming language that might one day compile to jvm bytecode.
+Custom types (which aren't classes) are hard af
+
+Basic examples with rs syntax highlighting
+
+```rust
+fn helloWorld -> Nothing {
+	print("Hello World!\n\r")
+}
+fn helloName (name: String) -> Nothing {
+	print(format("Hello, %s\n\r" % name))
+}
+fn emaNolleh (name: String) -> Nothing {
+	let nameReversed: String <- ""
+	let range: [int32] <- constructRange(|name|)
+	for (idx::range) -> Nothing {
+		nameReversed << name[|name| - idx]
+	}
+	print(format("%s ,olleH\n\r" % name))
+
+}
+
+fn isPrime (n: int32) -> Boolean {
+	let root: int32 <- squareRoot(n) as int32
+	let range: [int32] <- constructRange(2, root)
+	return for (divisor::range) -> Boolean {
+		if n % divisor == 0 {break false}
+	} else true
+}
+
+fn pushAndPop () -> Nothing {
+	let arr: [int32] <- :+[8]
+	arr << 2
+	arr << 4
+	print(arr) // [2,4,0,0,0,0,0,0]
+	print(|arr|) // 2 AAAAAAAAAAAAAAAAAAAAAAH
+	print(size(arr)) // 8
+}
+
+
+// most basic program
+let error_code: int32 <- 0
+return error_code
+
+```
