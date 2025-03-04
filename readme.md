@@ -1,6 +1,8 @@
 A programming language that might one day compile to jvm bytecode.
 Custom types (which aren't classes) are hard af
 
+Why is it named Rhodium? Rhodium is rare, has limited uses, and is denser than lead.
+
 Basic examples with rs syntax highlighting
 
 ```rust
