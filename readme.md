@@ -29,12 +29,16 @@ fn isPrime (n: int32) -> Boolean {
 }
 
 fn pushAndPop () -> Nothing {
+    // arrays are probably actually lists, since I want them to track length and memory size
 	let arr: [int32] <- :+[8]
 	arr << 2
 	arr << 4
 	print(arr) // [2,4,0,0,0,0,0,0]
 	print(|arr|) // 2 AAAAAAAAAAAAAAAAAAAAAAH
 	print(size(arr)) // 8
+    arr >> x
+    print(x) // [4]
+    print(arr) // [2,0,0,0,0,0,0,0]
 }
 
 
