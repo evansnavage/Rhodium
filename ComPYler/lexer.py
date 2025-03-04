@@ -42,7 +42,7 @@ class Token:
 
 
 def tokenize(source: str):
-    # as of writing takes 1ms/token
+    # as of writing takes 1ms/100 token
     tokens: list[Token] = []
     src: list[str] = [
         character for character in source
