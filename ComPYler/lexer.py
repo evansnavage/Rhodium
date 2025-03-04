@@ -2,7 +2,7 @@ from enum import Enum, auto
 import sys
 
 
-class Token_Type(Enum):
+class TokenType(Enum):
     # need to be sorted by distinctness, if :: and : are symbols,
     # :: needs to come first
     RETURN = auto()  # return
@@ -23,8 +23,8 @@ class Token_Type(Enum):
 
 
 KEYWORDS = {
-    "return": Token_Type.RETURN,
-    "let": Token_Type.LET,
+    "return": TokenType.RETURN,
+    "let": TokenType.LET,
 }
 
 # example program
@@ -33,7 +33,7 @@ KEYWORDS = {
 
 
 class Token:
-    def __init__(self, value: str, type: Token_Type):
+    def __init__(self, value: str, type: TokenType):
         self.value = value
         self.type = type
 
@@ -51,38 +51,38 @@ def tokenize(source: str):
         match src[0]:
             ### Parentheses
             case "(":
-                tokens.append(Token("(", Token_Type.PAREN_OPEN))
+                tokens.append(Token("(", TokenType.PAREN_OPEN))
             case ")":
-                tokens.append(Token(")", Token_Type.PAREN_CLOSE))
+                tokens.append(Token(")", TokenType.PAREN_CLOSE))
             ### Curly Brace
             case "{":
-                tokens.append(Token("{", Token_Type.CURLY_OPEN))
+                tokens.append(Token("{", TokenType.CURLY_OPEN))
             case "}":
-                tokens.append(Token("}", Token_Type.CURLY_CLOSE))
+                tokens.append(Token("}", TokenType.CURLY_CLOSE))
             ### Binary Operators
             case "+" | "-" | "/" | "*":
-                tokens.append(Token(src[0], Token_Type.BINARY_OPERATION))
+                tokens.append(Token(src[0], TokenType.BINARY_OPERATION))
             ### Assignment and LT GT Comparison
             case "<":  ## Assign, Push, LTE, LT
                 next_char = src[1]
                 if next_char == "-":
-                    tokens.append(Token("<-", Token_Type.ASSIGNMENT))
+                    tokens.append(Token("<-", TokenType.ASSIGNMENT))
                     src.pop(1)
                 elif next_char == "<":
-                    tokens.append(Token("<<", Token_Type.PUSH_POP))
+                    tokens.append(Token("<<", TokenType.PUSH_POP))
                     src.pop(1)
                 elif next_char == "=":
-                    tokens.append(Token("<=", Token_Type.COMPARISON_OPERATION))
+                    tokens.append(Token("<=", TokenType.COMPARISON_OPERATION))
                 else:
-                    tokens.append(Token("<", Token_Type.COMPARISON_OPERATION))
+                    tokens.append(Token("<", TokenType.COMPARISON_OPERATION))
             case ">":  ## Pop, GTE, GT
                 next_char = src[1]
                 if next_char == ">":
-                    tokens.append(Token(">>", Token_Type.PUSH_POP))
+                    tokens.append(Token(">>", TokenType.PUSH_POP))
                 elif next_char == "=":
-                    tokens.append(Token(">=", Token_Type.COMPARISON_OPERATION))
+                    tokens.append(Token(">=", TokenType.COMPARISON_OPERATION))
                 else:
-                    tokens.append(Token(">", Token_Type.COMPARISON_OPERATION))
+                    tokens.append(Token(">", TokenType.COMPARISON_OPERATION))
             case (
                 _
             ):  # basically else, tells us that whatever we have cannot be determined from it's first character
@@ -108,9 +108,9 @@ def tokenize(source: str):
                                 + "\nContinuing lexing..."
                             )
                             continue
-                        tokens.append(Token(word_str, Token_Type.INTEGER_LITERAL))
+                        tokens.append(Token(word_str, TokenType.INTEGER_LITERAL))
                     else:
-                        tokens.append(Token(word_str, Token_Type.IDENTIFIER))
+                        tokens.append(Token(word_str, TokenType.IDENTIFIER))
         ### Consume the token if it hasn't been
         if len(src) > 0:
             src.pop(0)
