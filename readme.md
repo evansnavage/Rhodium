@@ -5,7 +5,7 @@ Why is it named Rhodium? Rhodium is rare, has limited uses, and is denser than l
 
 Basic examples with rs syntax highlighting
 
-```rust
+```rs
 fn helloWorld -> Nothing {
 	print("Hello World!\n\r")
 }

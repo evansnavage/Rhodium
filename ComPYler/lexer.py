@@ -8,7 +8,7 @@ class TokenType(Enum):
     LET = auto()
     IDENTIFIER = auto()  # variable names
     ASSIGNMENT = auto()  # <-
-    INTEGER_LITERAL = auto()  # 12
+    NUMBER = auto()  # 12
     TYPE = auto()
     PAREN_OPEN = auto()
     PAREN_CLOSE = auto()
@@ -38,7 +38,7 @@ class Token:
         self.type = type
 
     def __str__(self):
-        return "{ Value: '" + self.value + "' Type: " + self.type.__str__() + "}"
+        return "{ Value: '" + self.value + "', Type: " + self.type.__str__() + "}"
 
 
 def tokenize(source: str):
@@ -52,8 +52,10 @@ def tokenize(source: str):
         match src[0]:
             ### Comment
             case "/":
-                if src[1] == "/":
-                    while src[0] != "\n":  ### Ignore the rest of the line
+                if len(src) > 1 and src[1] == "/":
+                    while (
+                        len(src) > 0 and src[0] != "\n"
+                    ):  ### Ignore the rest of the line
                         src.pop(0)
             ### Parentheses
             case "(":
@@ -70,23 +72,26 @@ def tokenize(source: str):
                 tokens.append(Token(src[0], TokenType.BINARY_OPERATION))
             ### Assignment and LT GT Comparison
             case "<":  ## Assign, Push, LTE, LT
-                next_char = src[1]
+                next_char = src[1] if len(src) > 1 else ""
                 if next_char == "-":
                     tokens.append(Token("<-", TokenType.ASSIGNMENT))
-                    src.pop(1)
+                    src.pop(0)
                 elif next_char == "<":
                     tokens.append(Token("<<", TokenType.PUSH_POP))
-                    src.pop(1)
+                    src.pop(0)
                 elif next_char == "=":
                     tokens.append(Token("<=", TokenType.COMPARISON_OPERATION))
+                    src.pop(0)
                 else:
                     tokens.append(Token("<", TokenType.COMPARISON_OPERATION))
             case ">":  ## Pop, GTE, GT
-                next_char = src[1]
+                next_char = src[1] if len(src) > 1 else ""
                 if next_char == ">":
                     tokens.append(Token(">>", TokenType.PUSH_POP))
+                    src.pop(0)
                 elif next_char == "=":
                     tokens.append(Token(">=", TokenType.COMPARISON_OPERATION))
+                    src.pop(0)
                 else:
                     tokens.append(Token(">", TokenType.COMPARISON_OPERATION))
             case (
@@ -101,34 +106,32 @@ def tokenize(source: str):
                     while len(src) > 0 and src[0] != '"':
                         word.append(src[0])
                         src.pop(0)
-                    src.pop(0)
-                else:
+                    if len(src) > 0:
+                        src.pop(0)
+                    tokens.append(Token("".join(word), TokenType.STRING_LITERAL))
+                elif not src[0].isspace():
                     while len(src) > 0 and not src[0].isspace():
                         word.append(src[0])
                         src.pop(0)
-                if len(word) > 0:
-                    word_str = "".join(word)
-                    if word_str in KEYWORDS:
-                        tokens.append(Token(word_str, KEYWORDS[word_str]))
-
-                    if word_str[0] == '"':
-                        tokens.append(Token(word_str, TokenType.STRING_LITERAL))
-
-                    elif word_str[0].isnumeric():
-                        try:
-                            int(word_str)
-                        except ValueError:
-                            print(
-                                "ERORR: "
-                                + "Identifiers may not start with a numeral. Attempted to create numeric value from: '"
-                                + word_str
-                                + "'"
-                                + "\nContinuing lexing..."
-                            )
-                            continue
-                        tokens.append(Token(word_str, TokenType.INTEGER_LITERAL))
-                    else:
-                        tokens.append(Token(word_str, TokenType.IDENTIFIER))
+                    if len(word) > 0:
+                        word_str = "".join(word)
+                        if word_str in KEYWORDS:
+                            tokens.append(Token(word_str, KEYWORDS[word_str]))
+                        elif word_str[0].isnumeric():
+                            try:
+                                int(word_str)
+                            except ValueError:
+                                print(
+                                    "ERROR: "
+                                    + "Identifiers may not start with a numeral. Attempted to create numeric value from: '"
+                                    + word_str
+                                    + "'"
+                                    + "\nContinuing lexing..."
+                                )
+                                continue
+                            tokens.append(Token(word_str, TokenType.NUMBER))
+                        else:
+                            tokens.append(Token(word_str, TokenType.IDENTIFIER))
         ### Consume the token if it hasn't been
         if len(src) > 0:
             src.pop(0)

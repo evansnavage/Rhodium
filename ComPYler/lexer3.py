@@ -4,7 +4,7 @@ import time
 from typing import List, Optional
 
 
-class TT(Enum):
+class TokenType(Enum):
     ### Map Searches
     ASSIGNMENT = auto()
     RETURN = auto()
@@ -27,37 +27,37 @@ class TT(Enum):
 
 
 KEYWORDS = {
-    "return": TT.RETURN,
-    "let": TT.LET,
+    "return": TokenType.RETURN,
+    "let": TokenType.LET,
 }
 SYMBOLS = {
-    "{": TT.OPEN_CURLY,
-    "}": TT.CLOSE_CURLY,
-    "(": TT.OPEN_PAREN,
-    ")": TT.CLOSE_CURLY,
-    "[": TT.OPEN_SQUARE,
-    "]": TT.CLOSE_SQUARE,
+    "{": TokenType.OPEN_CURLY,
+    "}": TokenType.CLOSE_CURLY,
+    "(": TokenType.OPEN_PAREN,
+    ")": TokenType.CLOSE_CURLY,
+    "[": TokenType.OPEN_SQUARE,
+    "]": TokenType.CLOSE_SQUARE,
     # LT, GT
-    ">": TT.COMPARISONOP,
-    "<": TT.COMPARISONOP,
+    ">": TokenType.COMPARISONOP,
+    "<": TokenType.COMPARISONOP,
     # Binary Operators
-    "+": TT.BINARYOP,
-    "-": TT.BINARYOP,
-    "/": TT.BINARYOP,
-    "*": TT.BINARYOP,
+    "+": TokenType.BINARYOP,
+    "-": TokenType.BINARYOP,
+    "/": TokenType.BINARYOP,
+    "*": TokenType.BINARYOP,
     ### LT+
-    "<-": TT.ASSIGNMENT,
-    "<=": TT.COMPARISONOP,
-    "<<": TT.PUSH,
+    "<-": TokenType.ASSIGNMENT,
+    "<=": TokenType.COMPARISONOP,
+    "<<": TokenType.PUSH,
     ### GT+
-    ">=": TT.COMPARISONOP,
-    "->": TT.ARROW,
-    ">>": TT.POP,
+    ">=": TokenType.COMPARISONOP,
+    "->": TokenType.ARROW,
+    ">>": TokenType.POP,
 }
 
 
 class Token:
-    def __init__(self, value: str, type: TT):
+    def __init__(self, value: str, type: TokenType):
         self.value = value
         self.type = type
 
@@ -99,14 +99,14 @@ class Lexer:
             raise SyntaxError("Unterminated string literal")
         value = self.source[start : self.position]
         self.advance()  # Skip the closing quote
-        return Token(value, TT.STRING_LITERAL)
+        return Token(value, TokenType.STRING_LITERAL)
 
     def parse_number(self) -> Optional[Token]:
         start = self.position
         while self.position < len(self.source) and self.source[self.position].isdigit():
             self.advance()
         value = self.source[start : self.position]
-        return Token(value, TT.NUMBER)
+        return Token(value, TokenType.NUMBER)
 
     def parse_identifier_or_keyword(self) -> Optional[Token]:
         start = self.position
@@ -117,7 +117,7 @@ class Lexer:
         value = self.source[start : self.position]
         if value in KEYWORDS:
             return Token(value, KEYWORDS[value])
-        return Token(value, TT.IDENTIFIER)
+        return Token(value, TokenType.IDENTIFIER)
 
     def parse_symbol(self) -> Optional[Token]:
         if self.position + 1 < len(self.source):
