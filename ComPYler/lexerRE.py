@@ -26,6 +26,7 @@ class TokenType(Enum):
     WHITESPACE = auto()
     INVALID = auto()
     COMMENT = auto()
+    TYPE = auto()
 
 
 TOKEN_PATTERNS = [
@@ -39,6 +40,8 @@ TOKEN_PATTERNS = [
     (r"->", TokenType.ARROW),  # ->
     (r"<=", TokenType.COMPARISONOP),  # <=
     (r">=", TokenType.COMPARISONOP),  # >=
+    (r": [a-zA-Z_][a-zA-Z0-9_]*", TokenType.TYPE),
+    # (r": [a-z]*", TokenType.TYPE),
     # Single-character symbols
     (r"\{", TokenType.OPEN_CURLY),  # {
     (r"\}", TokenType.CLOSE_CURLY),  # }
@@ -100,8 +103,10 @@ def tokenize(source: str) -> List[Token]:
             tokens.append(Token(matched, TokenType.INVALID))
             continue
 
+        base_token_type_name = token_type_name.rsplit("_", 1)[0]
+
         try:
-            token_type = TokenType[token_type_name]
+            token_type = TokenType[base_token_type_name]
         except KeyError:
             tokens.append(Token(matched, TokenType.INVALID))
         else:
