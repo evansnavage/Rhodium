@@ -1,140 +1,123 @@
+import re
 from enum import Enum, auto
+from typing import List
 import sys
 import time
 
 
 class TokenType(Enum):
-    RETURN = auto()  # return
-    LET = auto()
-    IDENTIFIER = auto()  # variable names
     ASSIGNMENT = auto()  # <-
-    NUMBER = auto()  # 12
+    RETURN = auto()  # return
+    LET = auto()  # let
+    OPEN_CURLY = auto()  # {
+    CLOSE_CURLY = auto()  # }
+    OPEN_PAREN = auto()  # (
+    CLOSE_PAREN = auto()  # )
+    OPEN_SQUARE = auto()  # [
+    CLOSE_SQUARE = auto()  # ]
+    PUSH = auto()  # <<
+    COMPARISONOP = auto()  # <, >, >=, <=
+    POP = auto()  # >>
+    BINARYOP = auto()  # +, -, *, /
+    ARROW = auto()  # ->
+    IDENTIFIER = auto()  # identifiers
+    STRING_LITERAL = auto()  # "string"
+    NUMBER = auto()  # numbers
+    WHITESPACE = auto()
+    INVALID = auto()
+    COMMENT = auto()
     TYPE = auto()
-    PAREN_OPEN = auto()
-    PAREN_CLOSE = auto()
-    CURLY_OPEN = auto()
-    CURLY_CLOSE = auto()
-    FUNCTION_DEF = auto()
-    RETURN_TYPE = auto()
-    BINARY_OPERATION = auto()
-    COMPARISON_OPERATION = auto()
-    PUSH_POP = auto()
-    STRING_LITERAL = auto()
 
 
-KEYWORDS = {
-    "return": TokenType.RETURN,
-    "let": TokenType.LET,
-}
+TOKEN_PATTERNS = [
+    # Sort by precedence
+    (r"//.*", TokenType.COMMENT),  # Matches // and everything after it on the line
+    (r"\s+", TokenType.WHITESPACE),  # Matches spaces, tabs, and newlines
+    # Multi-character symbols
+    (r"<-", TokenType.ASSIGNMENT),  # <-
+    (r"<<", TokenType.PUSH),  # <<
+    (r">>", TokenType.POP),  # >>
+    (r"->", TokenType.ARROW),  # ->
+    (r"<=", TokenType.COMPARISONOP),  # <=
+    (r">=", TokenType.COMPARISONOP),  # >=
+    (r": [a-zA-Z_][a-zA-Z0-9_]*", TokenType.TYPE),
+    # Single-character symbols
+    (r"\{", TokenType.OPEN_CURLY),  # {
+    (r"\}", TokenType.CLOSE_CURLY),  # }
+    (r"\(", TokenType.OPEN_PAREN),  # (
+    (r"\)", TokenType.CLOSE_PAREN),  # )
+    (r"\[", TokenType.OPEN_SQUARE),  # [
+    (r"\]", TokenType.CLOSE_SQUARE),  # ]
+    (r"<", TokenType.COMPARISONOP),  # <
+    (r">", TokenType.COMPARISONOP),  # >
+    (r"\+", TokenType.BINARYOP),  # +
+    (r"-", TokenType.BINARYOP),  # -
+    (r"\*", TokenType.BINARYOP),  # *
+    (r"/", TokenType.BINARYOP),  # /
+    # Keywords
+    (r"return", TokenType.RETURN),  # return
+    (r"let", TokenType.LET),  # let
+    # Identifiers
+    (r"[a-zA-Z_][a-zA-Z0-9_]*", TokenType.IDENTIFIER),  # variable names
+    # String literals
+    (
+        r'"[^"\\]*(?:\\.[^"\\]*)*"',
+        TokenType.STRING_LITERAL,
+    ),  # Matches "string" with escape sequences
+    # Numbers
+    (r"\d+", TokenType.NUMBER),  # Matches integers
+    # Invalid tokens (fallback)
+    (r".", TokenType.INVALID),  # Matches any single character not covered above
+]
 
-# example program
-# let error_code: int32 <- 0
-# return error_code
+TOKEN_REGEX = re.compile(
+    "|".join(
+        f"(?P<{tok.name}_{i}>{pat})" for i, (pat, tok) in enumerate(TOKEN_PATTERNS)
+    )
+)
 
 
 class Token:
-    def __init__(self, value: str, type: TokenType):
+    def __init__(self, value: str, type: TokenType, line: int):
         self.value = value
         self.type = type
+        self.line = line
 
     def __str__(self):
-        return "{ Value: '" + self.value + "', Type: " + self.type.__str__() + "}"
+        return f"{{ Value: '{self.value}', Type: {self.type}, Line: {self.line} }}"
 
 
-def tokenize(source: str):
-    # as of writing takes 1ms/100 token
-    tokens: list[Token] = []
-    src: list[str] = [
-        character for character in source
-    ]  # very non-performant way to do this, should prolly **at least** reverse and pop from the end so no re-indexing
-    # but I'm writing a compiler in python
-    while len(src) > 0:
-        match src[0]:
-            ### Comment
-            case "/":
-                if len(src) > 1 and src[1] == "/":
-                    while (
-                        len(src) > 0 and src[0] != "\n"
-                    ):  ### Ignore the rest of the line
-                        src.pop(0)
-            ### Parentheses
-            case "(":
-                tokens.append(Token("(", TokenType.PAREN_OPEN))
-            case ")":
-                tokens.append(Token(")", TokenType.PAREN_CLOSE))
-            ### Curly Brace
-            case "{":
-                tokens.append(Token("{", TokenType.CURLY_OPEN))
-            case "}":
-                tokens.append(Token("}", TokenType.CURLY_CLOSE))
-            ### Binary Operators
-            case "+" | "-" | "/" | "*":
-                tokens.append(Token(src[0], TokenType.BINARY_OPERATION))
-            ### Assignment and LT GT Comparison
-            case "<":  ## Assign, Push, LTE, LT
-                next_char = src[1] if len(src) > 1 else ""
-                if next_char == "-":
-                    tokens.append(Token("<-", TokenType.ASSIGNMENT))
-                    src.pop(0)
-                elif next_char == "<":
-                    tokens.append(Token("<<", TokenType.PUSH_POP))
-                    src.pop(0)
-                elif next_char == "=":
-                    tokens.append(Token("<=", TokenType.COMPARISON_OPERATION))
-                    src.pop(0)
-                else:
-                    tokens.append(Token("<", TokenType.COMPARISON_OPERATION))
-            case ">":  ## Pop, GTE, GT
-                next_char = src[1] if len(src) > 1 else ""
-                if next_char == ">":
-                    tokens.append(Token(">>", TokenType.PUSH_POP))
-                    src.pop(0)
-                elif next_char == "=":
-                    tokens.append(Token(">=", TokenType.COMPARISON_OPERATION))
-                    src.pop(0)
-                else:
-                    tokens.append(Token(">", TokenType.COMPARISON_OPERATION))
-            case (
-                _
-            ):  # basically else, tells us that whatever we have cannot be determined from it's first character
-                # so it's more than one letter (and not a special case like <-)
-                # loop until hit space, check if it's a keyword, ie. return, let
-                word = []
-                if src[0] == '"':
-                    src.pop(0)
-                    # string time
-                    while len(src) > 0 and src[0] != '"':
-                        word.append(src[0])
-                        src.pop(0)
-                    if len(src) > 0:
-                        src.pop(0)
-                    tokens.append(Token("".join(word), TokenType.STRING_LITERAL))
-                elif not src[0].isspace():
-                    while len(src) > 0 and not src[0].isspace():
-                        word.append(src[0])
-                        src.pop(0)
-                    if len(word) > 0:
-                        word_str = "".join(word)
-                        if word_str in KEYWORDS:
-                            tokens.append(Token(word_str, KEYWORDS[word_str]))
-                        elif word_str[0].isnumeric():
-                            try:
-                                int(word_str)
-                            except ValueError:
-                                print(
-                                    "ERROR: "
-                                    + "Identifiers may not start with a numeral. Attempted to create numeric value from: '"
-                                    + word_str
-                                    + "'"
-                                    + "\nContinuing lexing..."
-                                )
-                                continue
-                            tokens.append(Token(word_str, TokenType.NUMBER))
-                        else:
-                            tokens.append(Token(word_str, TokenType.IDENTIFIER))
-        ### Consume the token if it hasn't been
-        if len(src) > 0:
-            src.pop(0)
+def tokenize(source: str) -> List[Token]:
+    tokens = []
+    current_line = 1
+    for match in TOKEN_REGEX.finditer(source):
+        token_type_name = match.lastgroup
+        matched = match.group()
+
+        if token_type_name and token_type_name.split("_")[0] in [
+            "WHITESPACE",
+            "COMMENT",
+        ]:
+            current_line += matched.count('\n')
+            continue
+
+        if token_type_name is None:
+            tokens.append(Token(matched, TokenType.INVALID, current_line))
+            continue
+
+        base_token_type_name = token_type_name.rsplit("_", 1)[0]
+
+        try:
+            token_type = TokenType[base_token_type_name]
+        except KeyError:
+            tokens.append(Token(matched, TokenType.INVALID, current_line))
+        else:
+            if token_type == TokenType.STRING_LITERAL:
+                matched = matched[1:-1]
+            tokens.append(Token(matched, token_type, current_line))
+
+        current_line += matched.count('\n')
+
     return tokens
 
 
