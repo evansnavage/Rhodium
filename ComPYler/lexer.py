@@ -1,8 +1,8 @@
 import re
-from enum import Enum, auto
-from typing import List
 import sys
 import time
+from enum import Enum, auto
+from typing import List
 
 
 class TokenType(Enum):
@@ -17,55 +17,62 @@ class TokenType(Enum):
     CLOSE_SQUARE = auto()  # ]
     PUSH = auto()  # <<
     COMPARISONOP = auto()  # <, >, >=, <=
-    POP = auto()  # >>
+    PULL = auto()  # >> Pull from Datastructure
+    POP = auto() # :> Pull and Remove from Datastructure
     BINARYOP = auto()  # +, -, *, /
     ARROW = auto()  # ->
     IDENTIFIER = auto()  # identifiers
     STRING_LITERAL = auto()  # "string"
-    NUMBER = auto()  # numbers
+    INTEGER = auto()  # numbers
     WHITESPACE = auto()
     INVALID = auto()
     COMMENT = auto()
     TYPE = auto()
-
 
 TOKEN_PATTERNS = [
     # Sort by precedence
     (r"//.*", TokenType.COMMENT),  # Matches // and everything after it on the line
     (r"\s+", TokenType.WHITESPACE),  # Matches spaces, tabs, and newlines
     # Multi-character symbols
-    (r"<-", TokenType.ASSIGNMENT),  # <-
-    (r"<<", TokenType.PUSH),  # <<
-    (r">>", TokenType.POP),  # >>
-    (r"->", TokenType.ARROW),  # ->
-    (r"<=", TokenType.COMPARISONOP),  # <=
-    (r">=", TokenType.COMPARISONOP),  # >=
+    (r"<-", TokenType.ASSIGNMENT),
+    (r"<<", TokenType.PUSH),
+    (r">>", TokenType.PULL),
+    (r":>", TokenType.POP),
+    (r"->", TokenType.ARROW),
+    (r"<=", TokenType.COMPARISONOP),
+    (r">=", TokenType.COMPARISONOP),
+    (r"!<", TokenType.COMPARISONOP),
+    (r"!<=", TokenType.COMPARISONOP),
+    (r"!>", TokenType.COMPARISONOP),
+    (r"!>=", TokenType.COMPARISONOP),
+    (r"==", TokenType.COMPARISONOP),
+    (r"!=", TokenType.COMPARISONOP),
     (r": [a-zA-Z_][a-zA-Z0-9_]*", TokenType.TYPE),
     # Single-character symbols
-    (r"\{", TokenType.OPEN_CURLY),  # {
-    (r"\}", TokenType.CLOSE_CURLY),  # }
-    (r"\(", TokenType.OPEN_PAREN),  # (
-    (r"\)", TokenType.CLOSE_PAREN),  # )
-    (r"\[", TokenType.OPEN_SQUARE),  # [
-    (r"\]", TokenType.CLOSE_SQUARE),  # ]
-    (r"<", TokenType.COMPARISONOP),  # <
-    (r">", TokenType.COMPARISONOP),  # >
-    (r"\+", TokenType.BINARYOP),  # +
-    (r"-", TokenType.BINARYOP),  # -
-    (r"\*", TokenType.BINARYOP),  # *
-    (r"/", TokenType.BINARYOP),  # /
+    (r"\{", TokenType.OPEN_CURLY),
+    (r"\}", TokenType.CLOSE_CURLY),
+    (r"\(", TokenType.OPEN_PAREN),
+    (r"\)", TokenType.CLOSE_PAREN),
+    (r"\[", TokenType.OPEN_SQUARE),
+    (r"\]", TokenType.CLOSE_SQUARE),
+    (r"<", TokenType.COMPARISONOP),
+    (r">", TokenType.COMPARISONOP),
+    (r"\+", TokenType.BINARYOP),
+    (r"-", TokenType.BINARYOP),
+    (r"\*", TokenType.BINARYOP),
+    (r"/", TokenType.BINARYOP),
     # Keywords
-    (r"return", TokenType.RETURN),  # return
-    (r"let", TokenType.LET),  # let
+    (r"return", TokenType.RETURN),
+    (r"let", TokenType.LET),
     # Identifiers
-    (r"[a-zA-Z_][a-zA-Z0-9_]*", TokenType.IDENTIFIER),  # variable names
+    (r"[a-zA-Z_][a-zA-Z0-9_]*", TokenType.IDENTIFIER),
     # String literals
     (
         r'"[^"\\]*(?:\\.[^"\\]*)*"',
         TokenType.STRING_LITERAL,
     ),  # Matches "string" with escape sequences
     # Numbers
-    (r"\d+", TokenType.NUMBER),  # Matches integers
+    (r"\d+", TokenType.INTEGER),
     # Invalid tokens (fallback)
     (r".", TokenType.INVALID),  # Matches any single character not covered above
 ]
@@ -98,7 +105,7 @@ def tokenize(source: str) -> List[Token]:
             "WHITESPACE",
             "COMMENT",
         ]:
-            current_line += matched.count('\n')
+            current_line += matched.count("\n")
             continue
 
         if token_type_name is None:
@@ -116,7 +123,7 @@ def tokenize(source: str) -> List[Token]:
                 matched = matched[1:-1]
             tokens.append(Token(matched, token_type, current_line))
 
-        current_line += matched.count('\n')
+        current_line += matched.count("\n")
 
     return tokens
 

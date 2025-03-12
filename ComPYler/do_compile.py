@@ -15,13 +15,12 @@ def main(args):
         print("Elapsed: ", elapsed, "ms for ", len(tokens), " tokens.")
         # Verify Lexer Output
         print("Verifying lexed tokens.")
-        print("This step catches things like invalid types.")
-        print("Things like x: i11 that match the right syntax, but i11 isn't a type")
         start = time.time()
         tokens = lexerVerification.verify(tokens)
         elapsed = round((time.time() - start) * 1000, 5)
         print("Elapsed: ", elapsed, "ms")
 
+        print([str(token) for token in tokens])
 
 if __name__ == "__main__":
     main(sys.argv)

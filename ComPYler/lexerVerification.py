@@ -19,6 +19,7 @@ def print_line(tokens: list, line_num: int):
             return
 
 
+
 def verify_types(tokens: list[Token]):
     for token in tokens:
         errors: list = []
@@ -48,7 +49,7 @@ def verify_definition(tokens: list[Token]):
                 token_idx + 2 >= len(tokens)
                 or tokens[token_idx + 2].type is not TokenType.TYPE
             ):
-                errors.append("Expected type for assignment")
+                errors.append("Expected type (: type) after identifier in declaration")
             elif (
                 token_idx + 3 >= len(tokens)
                 or tokens[token_idx + 3].type is not TokenType.ASSIGNMENT
@@ -65,3 +66,4 @@ def verify_definition(tokens: list[Token]):
 def verify(tokens: list[Token]):
     verify_types(tokens)
     verify_definition(tokens)
+    return tokens
