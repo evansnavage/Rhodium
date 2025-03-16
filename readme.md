@@ -3,6 +3,8 @@ Custom types (which aren't classes) are hard af
 
 Why is it named Rhodium? Rhodium is rare, has limited uses, and is denser than lead.
 
+No commits as of recent as I'm reconsidering and trying to make sure that I like the syntax, and that it achieves the poorly defined goals I have for the language before I actually generate any code.
+
 Basic examples with rs syntax highlighting
 
 ```rs
